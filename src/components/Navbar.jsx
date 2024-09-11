@@ -34,25 +34,35 @@ function NavBar() {
 
       {/* Links for Larger Screens */}
       <nav className='hidden lg:flex'>
-        <ul className='flex space-x-6'>
-          {['Home', 'Features', 'Contact', 'About'].map((link, idx) => (
-            <motion.li
-              key={idx}
-              whileHover={{ scale: 1.1 }}
-              className='hover:text-purple-300 transition-all'
-            >
-              <NavLink
-                to={`/${link.toLowerCase()}`}
-                className={({ isActive }) =>
-                  isActive ? 'text-purple-300' : 'text-white'
-                }
-              >
-                {link}
-              </NavLink>
-            </motion.li>
-          ))}
-        </ul>
-      </nav>
+  <ul className='flex space-x-6'>
+    <motion.li
+      whileHover={{ scale: 1.1 }}
+      className='hover:text-purple-300 transition-all'
+    >
+      <NavLink
+        to='/'
+        className={({ isActive }) => (isActive ? 'text-purple-300' : 'text-white')}
+      >
+        Home
+      </NavLink>
+    </motion.li>
+
+    {['Features', 'Contact', 'About'].map((link, idx) => (
+      <motion.li
+        key={idx}
+        whileHover={{ scale: 1.1 }}
+        className='hover:text-purple-300 transition-all'
+      >
+        <NavLink
+          to={`/${link.toLowerCase()}`}
+          className={({ isActive }) => (isActive ? 'text-purple-300' : 'text-white')}
+        >
+          {link}
+        </NavLink>
+      </motion.li>
+    ))}
+  </ul>
+</nav>
 
       {/* Dropdown Menu for Mobile */}
       {isOpen && (
