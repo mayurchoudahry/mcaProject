@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { HiOutlineMenu, HiX } from 'react-icons/hi';
 
 function NavBar() {
@@ -20,9 +20,10 @@ function NavBar() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className='text-2xl font-bold text-purple-300'
+        className='text-2xl font-bold text-purple-300 cursor-pointer'
       >
-        AI Study Assistant
+        <Link to='/'> AI Study Assistant</Link>
+       
       </motion.h1>
 
       {/* Menu Icon for Mobile View */}
