@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Features from './pages/Features';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import QuizGenerator from './pages/Quiz';
 // import NotFound from './pages/NotFound';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path='/features' element={<Features />} />
         <Route path='/contact' element={<Contact />} />
         <Route path='/about' element={<About />} />
+        <Route path="/quiz-generator" element={<QuizGenerator />} />
         {/* <Route path='*' element={<NotFound />} /> */}
       </Routes>
     </Router>

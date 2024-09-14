@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'digital': ['Press Start 2P', 'cursive']
+      }
+    },
   },
   plugins: [],
 }
