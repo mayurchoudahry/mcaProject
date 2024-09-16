@@ -1,100 +1,61 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Link, NavLink } from 'react-router-dom';
-import { HiOutlineMenu, HiX } from 'react-icons/hi';
+import { Link } from 'react-router-dom';
 
 function NavBar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  // Retrieve user email from localStorage
+  const userEmail = localStorage.getItem('userEmail');
+
+  const handleMenuToggle = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    window.location.href = '/login'; // Redirect to login page
+  };
 
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ type: 'spring', stiffness: 50 }}
-      className='w-full h-20 bg-black/30 backdrop-blur-lg flex items-center justify-between px-10'
-    >
-      {/* Logo */}
-      <motion.h1
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className='text-2xl font-bold text-purple-300 cursor-pointer'
-      >
-        <Link to='/'> AI Study Assistant</Link>
-       
-      </motion.h1>
-
-      {/* Menu Icon for Mobile View */}
-      <div className='lg:hidden'>
-        <button onClick={toggleMenu} className='text-purple-300 text-3xl focus:outline-none'>
-          {isOpen ? <HiX /> : <HiOutlineMenu />}
-        </button>
+    <nav className='bg-gray-900 text-white p-4'>
+      <div className='flex items-center justify-between'>
+        <Link to='/' className='text-2xl font-bold'>
+          AI Study Assistant
+        </Link>
+        <div className='flex items-center space-x-4'>
+          <Link to='/about' className='hover:text-purple-300'>About</Link>
+          <Link to='/features' className='hover:text-purple-300'>Features</Link>
+          <Link to='/contact' className='hover:text-purple-300'>Contact</Link>
+          <Link to='/quiz-generator' className='hover:text-purple-300'>Quiz Generator</Link>
+          <div className='relative'>
+            <button
+              onClick={handleMenuToggle}
+              className='flex items-center'
+            >
+              <i className="fa-solid fa-user text-xl"></i>
+            </button>
+            {isMenuOpen && (
+              <div className='absolute right-0 bg-gray-800 text-white mt-2 py-2 px-4 rounded shadow-lg'>
+                {userEmail ? (
+                  <div>
+                    <p className='mb-2'>Logged in as: {userEmail}</p>
+                    <button
+                      onClick={handleLogout}
+                      className='text-red-500'
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <Link to='/login' className='block mb-2'>Login</Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Links for Larger Screens */}
-      <nav className='hidden lg:flex'>
-  <ul className='flex space-x-6'>
-    <motion.li
-      whileHover={{ scale: 1.1 }}
-      className='hover:text-purple-300 transition-all'
-    >
-      <NavLink
-        to='/'
-        className={({ isActive }) => (isActive ? 'text-purple-300' : 'text-white')}
-      >
-        Home
-      </NavLink>
-    </motion.li>
-
-    {['Features', 'Contact', 'About'].map((link, idx) => (
-      <motion.li
-        key={idx}
-        whileHover={{ scale: 1.1 }}
-        className='hover:text-purple-300 transition-all'
-      >
-        <NavLink
-          to={`/${link.toLowerCase()}`}
-          className={({ isActive }) => (isActive ? 'text-purple-300' : 'text-white')}
-        >
-          {link}
-        </NavLink>
-      </motion.li>
-    ))}
-  </ul>
-</nav>
-
-      {/* Dropdown Menu for Mobile */}
-      {isOpen && (
-        <motion.nav
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className='lg:hidden absolute top-20 left-0 w-full bg-black/80 p-6 backdrop-blur-lg'
-        >
-          <ul className='flex flex-col items-center space-y-4'>
-            {['Home', 'Features', 'Contact', 'About'].map((link, idx) => (
-              <motion.li
-                key={idx}
-                whileHover={{ scale: 1.1 }}
-                className='hover:text-purple-300 transition-all'
-              >
-                <NavLink
-                  to={`/${link.toLowerCase()}`}
-                  onClick={toggleMenu}
-                  className={({ isActive }) =>
-                    isActive ? 'text-purple-300' : 'text-white'
-                  }
-                >
-                  {link}
-                </NavLink>
-              </motion.li>
-            ))}
-          </ul>
-        </motion.nav>
-      )}
-    </motion.header>
+    </nav>
   );
 }
 

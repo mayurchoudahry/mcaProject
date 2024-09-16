@@ -66,7 +66,7 @@ function QuizGenerator() {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/generate-quiz', { 
+      const response = await axios.post('http://localhost:3000/api/generate-quiz', { 
         topic: topic.trim(), 
         questionType 
       });
