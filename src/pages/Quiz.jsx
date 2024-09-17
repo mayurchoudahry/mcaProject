@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 function QuizGenerator() {
   const [topic, setTopic] = useState('');
   const [questionType, setQuestionType] = useState('');
+  const [questionLevel, setQuestionLevel] = useState('');
   const [quiz, setQuiz] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -48,7 +49,7 @@ function QuizGenerator() {
     e.preventDefault();
     setLoading(true); // Set loading to true when starting quiz generation
     try {
-      const response = await axios.post('http://localhost:3000/generate-quiz', { topic, questionType });
+      const response = await axios.post('http://localhost:3000/generate-quiz', { topic, questionType,questionLevel });
       const questions = parseQuizData(response.data.questions.join('\n'));
       setQuiz(questions);
       setCurrentQuestionIndex(0);
@@ -147,6 +148,25 @@ function QuizGenerator() {
                 <option value='One Word'>One Word</option>
               </select>
             </div>
+
+            
+             {/* this is level of question */}
+              <div className='mb-4'>
+              <label className='block text-lg text-purple-300 mb-2'>Question Level</label>
+              <select
+                value={questionLevel}
+                onChange={(e) => setQuestionLevel(e.target.value)}
+                className='w-full p-2 rounded bg-purple-300 text-black outline-none'
+                required
+              >
+                <option value='' disabled>Select question Level</option>
+                <option value='beginner'>Beginner</option>
+                <option value='intermediate'>Intermediate </option>
+                <option value='advance'>Advance</option>
+              </select>
+            </div>  
+            
+            {/* this is end of level of qestion */}
             <button
               type='submit'
               className='w-full p-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold'
