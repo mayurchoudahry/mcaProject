@@ -7,84 +7,115 @@ import Footer from '../components/Footer';
 function QuizGenerator() {
   const [topic, setTopic] = useState('');
   const [questionType, setQuestionType] = useState('');
-  const [quiz, setQuiz] = useState([]);
+  const [quiz, setQuiz] = useState([]); // Default to empty array
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [selectedAnswer, setSelectedAnswer] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
   const [error, setError] = useState(null);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [userAnswers, setUserAnswers] = useState([]);
 
+  // Debug: Log API data to see the response
   const parseQuizData = (data) => {
-    const lines = data.split('\n');
     const questions = [];
+    const answers = [];
     let currentQuestion = null;
-    let answers = [];
 
-    lines.forEach(line => {
+    data.forEach(line => {
       if (line.startsWith('**')) {
         if (currentQuestion) {
+          // Save the previous question
           questions.push(currentQuestion);
+          answers.push(currentQuestion.correctAnswer);
         }
-        currentQuestion = { question: line.replace(/\*\*|[\d]+\. /g, '').trim(), options: [] };
-      } else if (line.startsWith('a)') || line.startsWith('b)') || line.startsWith('c)') || line.startsWith('d)')) {
-        currentQuestion.options.push(line);
-      } else if (line.startsWith('**Answer Key:**')) {
-        answers = line.replace('**Answer Key:**', '').trim().split(', ');
+        // Start a new question
+        currentQuestion = {
+          question: line.replace(/^.*\.\s*/, '').replace(/\?$/, ''),
+          options: [],
+          correctAnswer: ''
+        };
+      } else if (line.startsWith('    ')) {
+        // Option line
+        const option = line.replace(/^ {4}/, '').replace(/^\d+\)\s*/, '');
+        if (option.includes('Answer:')) {
+          currentQuestion.correctAnswer = option.split('Answer: ')[1].trim().replace(')', '');
+        } else {
+          currentQuestion.options.push(option);
+        }
       }
     });
 
     if (currentQuestion) {
+      // Push the last question
       questions.push(currentQuestion);
+      answers.push(currentQuestion.correctAnswer);
     }
 
-    setCorrectAnswers(answers);  // Store the correct answers
-    return questions;
+    return { questions, answers };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true when starting quiz generation
+    if (!topic.trim() || !questionType) {
+      alert('Please provide both topic and question type.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/generate-quiz', { topic, questionType });
-      const questions = parseQuizData(response.data.questions.join('\n'));
-      setQuiz(questions);
-      setCurrentQuestionIndex(0);
-      setTimeLeft(60);
-      setError(null);
-      setQuizCompleted(false);  // Reset quiz completion state
+      const response = await axios.post('http://localhost:3000/api/generate-quiz', { 
+        topic: topic.trim(), 
+        questionType 
+      });
+
+      // Debug: Check if response structure is correct
+      console.log('API response:', response.data);
+
+      if (response.data && response.data.questions) {
+        const { questions, answers } = parseQuizData(response.data.questions);
+        setQuiz(questions);
+        setCorrectAnswers(answers);  // Store correct answers
+        setUserAnswers(new Array(questions.length).fill(null));  // Initialize answers array
+        setCurrentQuestionIndex(0);
+        setTimeLeft(60);
+        setError(null);
+        setQuizCompleted(false);
+      } else {
+        setError('Invalid API response.');
+      }
     } catch (err) {
+      console.error(err);
       setError('An error occurred while generating the quiz.');
     } finally {
-      setLoading(false); // Set loading to false when quiz generation is done
+      setLoading(false);
     }
   };
 
   const handleAnswerSelection = (option) => {
-    setSelectedAnswer(option); // Set the selected answer for the current question
+    setSelectedAnswer(option);
   };
 
   const handleQuestionSubmit = () => {
-    const correctAnswer = correctAnswers[currentQuestionIndex];
-    if (selectedAnswer === correctAnswer) {
+    if (!selectedAnswer) {
+      alert('Please select an answer before submitting.');
+      return;
+    }
+
+    const updatedUserAnswers = [...userAnswers];
+    updatedUserAnswers[currentQuestionIndex] = selectedAnswer;
+    setUserAnswers(updatedUserAnswers);
+
+    if (selectedAnswer.trim().toLowerCase() === correctAnswers[currentQuestionIndex].trim().toLowerCase()) {
       setScore(prevScore => prevScore + 1);
     }
+    
 
-    // Move to the next question or complete the quiz
     if (currentQuestionIndex < quiz.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-      setSelectedAnswer(null); // Reset the selected answer for the next question
-      setTimeLeft(60); // Reset the timer for the next question
-    } else {
-      setQuizCompleted(true); // Mark quiz as completed
-    }
-  };
-
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < quiz.length - 1) {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      setSelectedAnswer('');
       setTimeLeft(60);
     } else {
       setQuizCompleted(true);
@@ -93,29 +124,29 @@ function QuizGenerator() {
 
   useEffect(() => {
     let timer;
-    if (timeLeft > 0 && quiz.length > 0) {
+    if (timeLeft > 0 && quiz.length > 0 && !quizCompleted) {
       timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-    } else if (timeLeft === 0 && quiz.length > 0) {
-      handleQuestionSubmit(); // Automatically submit when time runs out
+    } else if (timeLeft === 0 && quiz.length > 0 && !quizCompleted) {
+      handleQuestionSubmit();
     }
 
     return () => clearInterval(timer);
-  }, [timeLeft, quiz, selectedAnswer]);
+  }, [timeLeft, quiz, quizCompleted]);
 
   const currentQuestion = quiz[currentQuestionIndex];
 
   return (
-    <div className='h-screen w-screen bg-gradient-to-r from-purple-800 via-black to-blue-900 text-white'>
+    <div className='min-h-screen w-screen bg-gradient-to-r from-purple-800 via-black to-blue-900 text-white flex flex-col'>
       <NavBar />
       <motion.main
-        className='flex flex-col items-center justify-center p-10'
+        className='flex flex-col items-center justify-center flex-grow p-10'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
         <h2 className='text-4xl font-bold text-purple-300 mb-10'>Quiz Generator</h2>
-        
-        {loading ? ( // Show loader while loading
+
+        {loading ? (
           <div className="flex items-center justify-center mt-4">
             <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
             <p className="ml-4 text-2xl text-purple-300">Generating quiz...</p>
@@ -157,45 +188,65 @@ function QuizGenerator() {
         )}
 
         {quiz.length > 0 && currentQuestion && !quizCompleted && (
-          <div className='mt-10'>
+          <div className='mt-10 max-w-md w-full'>
             <h3 className='text-2xl font-bold text-purple-300'>
               Question {currentQuestionIndex + 1} / {quiz.length}
             </h3>
             <div className='bg-gray-800 p-4 rounded text-white'>
-              <p className='text-xl'>{currentQuestion.question}</p>
+              <p className='text-xl whitespace-pre-wrap'>{currentQuestion.question}</p>
               <ul className='list-disc pl-5 mt-2'>
-                {currentQuestion.options.map((option, index) => (
-                  <li key={index} className='text-lg'>
-                    <label>
-                      <input
-                        type='radio'
-                        name={`question-${currentQuestionIndex}`}
-                        onChange={() => handleAnswerSelection(option)}
-                        checked={selectedAnswer === option} // Display the selected option
-                        className='mr-2'
-                      />
-                      {option}
-                    </label>
-                  </li>
-                ))}
+                {currentQuestion.options.length > 0 ? (
+                  currentQuestion.options.map((option, index) => (
+                    <li key={index} className='text-lg'>
+                      <label>
+                        <input
+                          type='radio'
+                          name={`question-${currentQuestionIndex}`}
+                          onChange={() => handleAnswerSelection(option)}
+                          checked={selectedAnswer === option}
+                          className='mr-2'
+                        />
+                        {option}
+                      </label>
+                    </li>
+                  ))
+                ) : (
+                  <p>No options available for this question.</p>
+                )}
               </ul>
             </div>
             <p className='mt-4 text-lg'>Time left: {timeLeft}s</p>
             <button
               onClick={handleQuestionSubmit}
-              className='mt-4 p-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold'
+              className='mt-4 p-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-bold w-full'
             >
               Submit Answer
             </button>
           </div>
         )}
 
+        {/* Display the quiz results */}
         {quizCompleted && (
           <div className='mt-10'>
             <h3 className='text-3xl font-bold text-purple-300 mb-4'>Quiz Completed!</h3>
             <p className='text-2xl text-green-400'>Your Score: {score} / {quiz.length}</p>
+            <div className='mt-8'>
+              <h4 className='text-xl font-bold text-purple-300'>Correct Answers:</h4>
+              <ul>
+                {quiz.map((question, index) => (
+                  <li key={index} className='mt-2 text-white'>
+                    <strong>Q{index + 1}: </strong>{question.question}
+                    <br />
+                    <strong>Correct Answer: </strong>{correctAnswers[index]}
+                    <br />
+                    <strong>Your Answer: </strong>{userAnswers[index] || 'Not Answered'}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         )}
+
       </motion.main>
       <Footer />
     </div>
