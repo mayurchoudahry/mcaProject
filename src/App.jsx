@@ -7,6 +7,7 @@ import About from './pages/About';
 import QuizGenerator from './pages/Quiz';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import QuizPage from './pages/QuizPage';
 // import NotFound from './pages/NotFound';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         {/* <Route path='*' element={<NotFound />} /> */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/quiz" element={<QuizPage />} /> {/* Use 'element' instead of 'component' */}
       </Routes>
     </Router>
   );
