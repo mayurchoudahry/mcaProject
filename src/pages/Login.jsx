@@ -4,12 +4,14 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import NavBar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth(); // Get the login function from AuthContext
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -19,7 +21,11 @@ function Login() {
         // Handle successful login (e.g., save token, redirect)
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userEmail', response.data.user.email);
-        navigate('/');
+        
+        // Call login function from AuthContext
+        login();
+
+        navigate('/'); // Redirect after login
       } else {
         setError('Invalid email or password');
       }

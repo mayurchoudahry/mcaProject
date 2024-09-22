@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext';
 
 function QuizGenerator() {
+  const { isAuthenticated } = useAuth(); // Get authentication status
   const [topic, setTopic] = useState('');
   const [questionType, setQuestionType] = useState('');
   const [questionLevel, setQuestionLevel] = useState(''); // New state for difficulty level
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    navigate('/login', { state: { message: 'Please log in first before generating the quiz.' } });
+    return null; // Prevent rendering the component
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
