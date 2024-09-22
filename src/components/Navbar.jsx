@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,7 +19,12 @@ function NavBar() {
   };
 
   return (
-    <nav className='bg-gray-900 text-white p-4'>
+    <motion.nav
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: 'spring', stiffness: 50 }}
+      className='bg-gray-900 text-white p-4'
+    >
       <div className='flex items-center justify-between'>
         <Link to='/' className='text-2xl font-bold'>
           AI Study Assistant
@@ -55,7 +61,7 @@ function NavBar() {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
