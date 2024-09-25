@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import NavBar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext'; // Import the Auth context
 
 function QuizPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { quiz, correctAnswers } = location.state;
+  const { quiz, correctAnswers,topic } = location.state;
+  const { isAuthenticated, userId } = useAuth(); // Use authentication context
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [timeLeft, setTimeLeft] = useState(40);
@@ -27,32 +30,138 @@ function QuizPage() {
   }, [timeLeft, quizCompleted]);
 
   const handleQuestionSubmit = () => {
-    if (selectedAnswer) {
-      const updatedUserAnswers = [...userAnswers];
-      updatedUserAnswers[currentQuestionIndex] = selectedAnswer;
-      setUserAnswers(updatedUserAnswers);
-
-      if (selectedAnswer.trim().toLowerCase() === correctAnswers[currentQuestionIndex].trim().toLowerCase()) {
-        setScore(prevScore => prevScore + 1);
-      }
+    if (selectedAnswer.trim() === "") {
+      console.log("Answer cannot be empty!");
+      return; // Prevent submission of empty answers
     }
-
+  
+    const updatedUserAnswers = [...userAnswers];
+    updatedUserAnswers[currentQuestionIndex] = selectedAnswer;
+    setUserAnswers(updatedUserAnswers);
+  
+    // Existing logic for checking correct answers...
+  
     if (currentQuestionIndex < quiz.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1);
       setSelectedAnswer('');
       setTimeLeft(40);
     } else {
       setQuizCompleted(true);
+      if (isAuthenticated) {
+        submitResults(); // Only submit if authenticated
+      }
     }
   };
+   
+  const parseQuizData = (data) => {
+    const questions = [];
+    const answers = [];
+    let currentQuestion = null;
+  
+    data.forEach(line => {
+      if (line.startsWith('**')) {
+        if (currentQuestion) {
+          questions.push(currentQuestion);
+          answers.push(currentQuestion.correctAnswer); // Ensure this is clean
+        }
+        currentQuestion = {
+          question: line.replace(/^.*\.\s*/, '').replace(/\?$/, ''),
+          options: [],
+          correctAnswer: ''
+        };
+      } else if (line.startsWith('    ')) {
+        const option = line.replace(/^ {4}/, '').replace(/^\d+\)\s*/, '');
+        if (option.includes('Answer:')) {
+          currentQuestion.correctAnswer = option.split('Answer: ')[1].trim().replace(/\*\*$/, ''); // Remove trailing asterisks
+        } else {
+          currentQuestion.options.push(option);
+        }
+      }
+    });
+  
+    if (currentQuestion) {
+      questions.push(currentQuestion);
+      answers.push(currentQuestion.correctAnswer.replace(/\*\*$/, '')); // Clean the final answer as well
+    }
+  
+    return { questions, answers };
+  };
+  
+  const submitResults = async () => {
+    if (!userId || !topic || !userAnswers.length) {
+      console.error('Missing required data:', { userId, topic, userAnswers });
+      return;
+    }
+  
+    const results = {
+      userId,
+      topic,
+      quizResults: userAnswers.map((answer, index) => ({
+        question: quiz[index].question,
+        userAnswer: answer,
+        isCorrect: answer.trim().toLowerCase() === correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(),
+      })),
+    };
+  
+    console.log('Submitting results:', results);
+  
+    try {
+      const response = await axios.post('http://localhost:3000/api/submit-results', results);
+      console.log('Response from server:', response.data);
+      if (response.status === 201) {
+        console.log('Results saved successfully');
+      } else {  
+        console.error('Failed to save results:', response.data);
+             }
+           } catch (error) {
+             console.error('Error saving results:', error.response ? error.response.data : error.message);
+           }
+        };
+  
+
+
+  // const submitResults = async () => {
+  //   if (!userId || !topic || !userAnswers.length) {
+  //     console.error('Missing required data:', { userId, topic, userAnswers });
+  //     return;
+  //   }
+  
+  //   const results = {
+  //     userId,
+  //     topic,
+  //     quizResults: userAnswers.map((answer, index) => ({
+  //       question: quiz[index].question,
+  //       userAnswer: answer,
+  //       isCorrect: answer.trim().toLowerCase() === correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(),
+  //     })),
+  //   };
+  
+  //   console.log('Submitting results:', results);
+  
+  //   try {
+  //     const response = await axios.post('http://localhost:3000/api/submit-results', results);
+  //     console.log('Response from server:', response.data);
+  //     if (response.status === 201) {
+  //       console.log('Results saved successfully');
+  //     } else {
+  //       console.error('Failed to save results:', response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving results:', error.response ? error.response.data : error.message);
+  //   }
+  // };
+  
+  
+    
+
 
   const handleBackToQuizGenerator = () => {
     navigate('/quiz-generator');
   };
 
-  const currentQuestion = quiz[currentQuestionIndex];
+  
 
-  // Calculate the progress bar width as a percentage based on time left
+  const currentQuestion = quiz[currentQuestionIndex];
   const progressBarWidth = (timeLeft / 40) * 100;
 
   return (
@@ -65,9 +174,8 @@ function QuizPage() {
           <motion.div
             initial={{ width: '100%' }}
             animate={{ width: `${progressBarWidth}%` }}
-            transition={{ ease: 'linear', duration: 1 }} // Smooth transition
+            transition={{ ease: 'linear', duration: 1 }}
             className='h-full bg-green-500'
-            style={{ width: `${progressBarWidth}%` }}
           />
         </div>
 
