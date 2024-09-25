@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import NavBar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,7 +9,7 @@ import { useAuth } from '../context/AuthContext'; // Import the Auth context
 function QuizPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { quiz, correctAnswers } = location.state;
+  const { quiz, correctAnswers,topic } = location.state;
   const { isAuthenticated, userId } = useAuth(); // Use authentication context
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
@@ -29,26 +30,16 @@ function QuizPage() {
   }, [timeLeft, quizCompleted]);
 
   const handleQuestionSubmit = () => {
-    if (selectedAnswer) {
-      const updatedUserAnswers = [...userAnswers];
-      updatedUserAnswers[currentQuestionIndex] = selectedAnswer;
-      setUserAnswers(updatedUserAnswers);
-  
-      // Clean the correct answer
-      const correctAnswer = correctAnswers[currentQuestionIndex].replace(/\*\*$/, '').trim().toLowerCase();
-      const userAnswer = selectedAnswer.trim().toLowerCase();
-  
-      console.log(`Selected Answer: ${userAnswer}`);
-      console.log(`Correct Answer: ${correctAnswer}`);
-      console.log(`Comparing: ${userAnswer} with ${correctAnswer}`);
-  
-      if (userAnswer === correctAnswer) {
-        setScore(prevScore => prevScore + 1);
-        console.log('Correct answer! Score updated.');
-      } else {
-        console.log('Incorrect answer.');
-      }
+    if (selectedAnswer.trim() === "") {
+      console.log("Answer cannot be empty!");
+      return; // Prevent submission of empty answers
     }
+  
+    const updatedUserAnswers = [...userAnswers];
+    updatedUserAnswers[currentQuestionIndex] = selectedAnswer;
+    setUserAnswers(updatedUserAnswers);
+  
+    // Existing logic for checking correct answers...
   
     if (currentQuestionIndex < quiz.length - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1);
@@ -57,11 +48,11 @@ function QuizPage() {
     } else {
       setQuizCompleted(true);
       if (isAuthenticated) {
-        submitResults();
+        submitResults(); // Only submit if authenticated
       }
     }
   };
-  
+   
   const parseQuizData = (data) => {
     const questions = [];
     const answers = [];
@@ -96,38 +87,79 @@ function QuizPage() {
     return { questions, answers };
   };
   
-  
-
   const submitResults = async () => {
+    if (!userId || !topic || !userAnswers.length) {
+      console.error('Missing required data:', { userId, topic, userAnswers });
+      return;
+    }
+  
     const results = {
       userId,
-      score,
-      answers: userAnswers,
+      topic,
+      quizResults: userAnswers.map((answer, index) => ({
+        question: quiz[index].question,
+        userAnswer: answer,
+        isCorrect: answer.trim().toLowerCase() === correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(),
+      })),
     };
-
+  
+    console.log('Submitting results:', results);
+  
     try {
-      const response = await fetch('/api/submit-results', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(results),
-      });
+      const response = await axios.post('http://localhost:3000/api/submit-results', results);
+      console.log('Response from server:', response.data);
+      if (response.status === 201) {
+        console.log('Results saved successfully');
+      } else {  
+        console.error('Failed to save results:', response.data);
+             }
+           } catch (error) {
+             console.error('Error saving results:', error.response ? error.response.data : error.message);
+           }
+        };
+  
 
-      if (!response.ok) {
-        throw new Error('Failed to submit results');
-      }
 
-      const data = await response.json();
-      console.log('Results submitted:', data);
-    } catch (error) {
-      console.error('Error submitting results:', error);
-    }
-  };
+  // const submitResults = async () => {
+  //   if (!userId || !topic || !userAnswers.length) {
+  //     console.error('Missing required data:', { userId, topic, userAnswers });
+  //     return;
+  //   }
+  
+  //   const results = {
+  //     userId,
+  //     topic,
+  //     quizResults: userAnswers.map((answer, index) => ({
+  //       question: quiz[index].question,
+  //       userAnswer: answer,
+  //       isCorrect: answer.trim().toLowerCase() === correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(),
+  //     })),
+  //   };
+  
+  //   console.log('Submitting results:', results);
+  
+  //   try {
+  //     const response = await axios.post('http://localhost:3000/api/submit-results', results);
+  //     console.log('Response from server:', response.data);
+  //     if (response.status === 201) {
+  //       console.log('Results saved successfully');
+  //     } else {
+  //       console.error('Failed to save results:', response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving results:', error.response ? error.response.data : error.message);
+  //   }
+  // };
+  
+  
+    
+
 
   const handleBackToQuizGenerator = () => {
     navigate('/quiz-generator');
   };
+
+  
 
   const currentQuestion = quiz[currentQuestionIndex];
   const progressBarWidth = (timeLeft / 40) * 100;

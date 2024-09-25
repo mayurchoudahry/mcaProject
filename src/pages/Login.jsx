@@ -21,9 +21,9 @@ function Login() {
         // Handle successful login (e.g., save token, redirect)
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userEmail', response.data.user.email);
-        
-        // Call login function from AuthContext
-        login();
+
+        // Call login function from AuthContext with user ID
+        login(response.data.user.id); // Pass the user ID here
 
         navigate('/'); // Redirect after login
       } else {

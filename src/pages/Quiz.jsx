@@ -40,7 +40,7 @@ function QuizGenerator() {
         const { questions, answers } = parseQuizData(response.data.questions);
         
         // Redirect to Quiz Page using navigate
-        navigate('/quiz', { state: { quiz: questions, correctAnswers: answers } });
+        navigate('/quiz', { state: { quiz: questions, correctAnswers: answers , topic: topic.trim()} });
       } else {
         setError('Invalid API response.');
       }
