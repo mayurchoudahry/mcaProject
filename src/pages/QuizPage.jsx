@@ -17,7 +17,8 @@ function QuizPage() {
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [userAnswers, setUserAnswers] = useState(new Array(quiz.length).fill(null));
-
+ console.log(userId, isAuthenticated);
+ 
   useEffect(() => {
     let timer;
     if (timeLeft > 0 && !quizCompleted) {
