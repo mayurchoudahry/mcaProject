@@ -15,6 +15,7 @@ function NavBar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userId');
     window.location.href = '/login'; // Redirect to login page
   };
 
