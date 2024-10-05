@@ -17,7 +17,10 @@ function QuizPage() {
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [userAnswers, setUserAnswers] = useState(new Array(quiz.length).fill(null));
-
+  useEffect(() => {
+    console.log('Component mounted or userId changed:', userId);
+  }, [userId]);
+ 
   useEffect(() => {
     let timer;
     if (timeLeft > 0 && !quizCompleted) {
@@ -93,15 +96,35 @@ function QuizPage() {
       return;
     }
   
+    // Initialize score to zero
+    let totalScore = 0;
+  
     const results = {
       userId,
       topic,
-      quizResults: userAnswers.map((answer, index) => ({
-        question: quiz[index].question,
-        userAnswer: answer,
-        isCorrect: answer.trim().toLowerCase() === correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(),
-      })),
+      quizResults: userAnswers.map((answer, index) => {
+        const correctAnswer = correctAnswers[index].replace(/\*\*$/, '').trim().toLowerCase(); // Clean and normalize the correct answer
+        const userAnswer = answer ? answer.trim().toLowerCase() : ''; // Clean and normalize the user's answer
+        
+        const isCorrect = userAnswer === correctAnswer; // Compare the cleaned values
+  
+        if (isCorrect) {
+          totalScore += 1; // Increment score if correct
+        }
+  
+        return {
+          question: quiz[index].question,
+          userAnswer: answer || 'No Answer', // Provide default if no answer
+          isCorrect,
+        };
+      }),
     };
+  
+    // Log the total score for debugging
+    console.log('Total Score:', totalScore);
+  
+    // Set the final score before submitting the results
+    setScore(totalScore); // <-- Update the state here
   
     console.log('Submitting results:', results);
   
@@ -110,15 +133,16 @@ function QuizPage() {
       console.log('Response from server:', response.data);
       if (response.status === 201) {
         console.log('Results saved successfully');
-      } else {  
+      } else {
         console.error('Failed to save results:', response.data);
-             }
-           } catch (error) {
-             console.error('Error saving results:', error.response ? error.response.data : error.message);
-           }
-        };
+      }
+    } catch (error) {
+      console.error('Error saving results:', error.response ? error.response.data : error.message);
+    }
+  };
   
-
+  
+  
 
   // const submitResults = async () => {
   //   if (!userId || !topic || !userAnswers.length) {
