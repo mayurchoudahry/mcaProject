@@ -64,8 +64,9 @@ function MainSection() {
         <FeatureCard title="Quiz Generator" description="Create personalized quizzes for better retention." />
         </Link>
         <FeatureCard title="Study Plans" description="Generate study plans tailored to your needs." />
-        
+        <Link to="/progress">
         <FeatureCard title="Progress Tracker" description="Track your study progress and performance." />
+        </Link>
       </motion.div>
     </motion.main>
   );

@@ -40,9 +40,10 @@ function Features() {
           <motion.div
             whileHover={{ scale: 1.05, boxShadow: "0px 0px 10px rgb(0,0,255)" }}
             className='bg-white/10 p-6 rounded-lg shadow-lg hover:bg-white/20 transition-all'
-          >
+          >  <Link to="/note">
             <h3 className='text-2xl'>Notes Summarizer</h3>
             <p className='mt-2 text-gray-300'>Automatically summarize lengthy notes for quick review.</p>
+            </Link>
           </motion.div>
           <motion.div
             whileHover={{ scale: 1.05, boxShadow: "0px 0px 10px rgb(0,0,255)" }}
