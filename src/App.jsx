@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import QuizPage from './pages/QuizPage';
 import ProgressTracker from './pages/ProgressTracker';
+import NoteSummarizer from './pages/NoteSummry';
 
 function App() {
   const { isAuthenticated,loading } = useAuth();
@@ -32,6 +33,7 @@ function App() {
         <Route path="/progress" element={isAuthenticated ? <ProgressTracker /> : <Navigate to="/login" />} />
         <Route path="/register" element={<Register />} />
         <Route path="/quiz" element={<QuizPage />} />
+        <Route path='/note' element={<NoteSummarizer />} />
       </Routes>
     </Router>
   );
