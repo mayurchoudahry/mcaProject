@@ -22,12 +22,14 @@ function MainSection() {
           <p className='text-lg max-w-md text-gray-300'>
             Elevate your study experience with personalized AI-powered tools
           </p>
-          <motion.button
-            whileHover={{ scale: 1.1, boxShadow: "0px 0px 8px rgb(255,255,255)" }}
-            className='mt-6 px-6 py-2 bg-purple-600 rounded-full shadow-md text-white hover:bg-black'
-          >
-            Get Started
-          </motion.button>
+          <Link to="/quiz-generator">
+            <motion.button
+              whileHover={{ scale: 1.1, boxShadow: "0px 0px 8px rgb(255,255,255)" }}
+              className='mt-6 px-6 py-2 bg-purple-600 rounded-full shadow-md text-white hover:bg-black'
+            >
+              Get Started
+            </motion.button>
+          </Link>
         </motion.div>
         <motion.div
           initial={{ scale: 0.8 }}
