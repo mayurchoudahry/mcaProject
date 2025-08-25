@@ -64,7 +64,7 @@ function QuizGenerator() {
           answers.push(currentQuestion.correctAnswer);
         }
         currentQuestion = {
-          question: line.replace(/^.*\.\s*/, '').replace(/\?$/, ''),
+          question: line,
           options: [],
           correctAnswer: ''
         };
